@@ -42,6 +42,14 @@ contexts:
         - match: \bthen\b
           scope: keyword.control.conditional.muf
           pop: true
+    - match: \bbegin\b
+      scope: keyword.control.muf
+      push:
+        - meta_scope: meta.block.muf
+        - include: expression
+        - match: \b(until|repeat)\b
+          scope: keyword.control.muf
+          pop: true
   constants:
     - match: '#[0-9]+'
       scope: constant.other.placeholder.muf
@@ -54,11 +62,9 @@ contexts:
           pop: true
 
   operators:
-    - match: \b(dupn?|over|pick|\+\+?|\-\-?|/|(?:(?:bit)?(?:or|and|xor))|not|tuck|!|popn?|(?:<|>|!)=|@)\b
+    - match: \b(\+|\-|\*|/|%|<|>|=|!=|<=|>=|\^|RANDOM|BITOR|BITXOR|BITSHIFT|\+\+|\-\-|CEIL|FLOOR|SQRT|PI|ROUND|SIN|COS|TAN|ASIN|ACOS|ATAN|ATAN2|DIST3D|XYZ_TO_POLAR|POLAR_TO_XYZ|EXP|LOG|LOG10|FABS|POW|FRAND|FMOD|MODF|AND|OR|NOT|ABS|SRAND|GETSEED|SETSEED|SIGN|XOR|INF|EPSILON|VAR|VARIABLE|VARIABLE\?|LVAR|LOCALVAR|@|!|ME|TRIGGER|COMMAND|DESCR|VAR!)\b
       scope: keyword.operator.muf
-    - match: (notify|array_(?:setitem|getitem|getrange|setrange))
-      scope: support.function.muf
-    - match: '(ARRAY(\?|_(MA(TCH(VAL|KEY)|KE(_DICT)?)|RE(G(MATCH(VAL|KEY)|SUB|FILTER_PROP)|VERSE)|D(EL(RANGE|ITEM)|IFF)|(F(I(LTER_(PROP|FLAGS|SMART)|NDVAL|RST)|MTSTRING|GET(_(PROP((VAL|DIR)S|LIST)|REFLIST)|RANGE|ITEM|LINK)S)|(IN(SERT(RANGE|ITEM)|TER(SEC|PRE)|(EX(PLODE|CLUDEVAL|TRA|N(E(STED_(DEL|[GS]ET)|XT)|OTIFY(_HTML)?|DIFF|UNION|INTERSE)C|S(ET(RANGE|ITEM)|ORT(_INDEXED)?|UM|TRING_FRAGMEN|C(O(MPARE|UNT)|U)T)|P(UT_(PROP(VALS|LIST)|REFLIST)|REV)|A(PPENDITEM|NSI_NOTIFY)|(JOI|UNIO)N|(VAL|KEY)S|LAST))|array(\?|_(ma(tch(val|key)|ke(_dict)?)|re(g(match(val|key)|sub|filter_prop)|verse)|d(el(range|item)|iff)|(f(i(lter_(prop|flags|smart)|ndval|rst)|mtstring|get(_(prop((val|dir)s|list)|reflist)|range|item|link)s)|(in(sert(range|item)|ter(sec|pre)|(ex(plode|cludeval|tra|n(e(sted_(del|[gs]et)|xt)|otify(_html)?|diff|union|interse)c|s(et(range|item)|ort(_indexed)?|um|tring_fragmen|c(o(mpare|unt)|u)t)|p(ut_(prop(vals|list)|reflist)|rev)|a(ppenditem|nsi_notify)|(joi|unio)n|(val|key)s|last))|D(ICTIONARY\?|ESCR_ARRAY)|d(ictionary\?|escr_array)|GET(OBJ|DESCR)INFO|((REG)?FIND|ONLINE|(E(NTRANCE|XIT)|CONTENT)S)_ARRAY|get(obj|descr)info|((reg)?find|online|(e(ntrance|xit)|content)s)_array)))))))))))'
+    - match: '\b(preempt|foreground|background|mode|setmode|pr_mode|fg_mode|bg_mode|sleep|event_wait|event_send|event_count|event_exists|timer_start|timer_stop|event_waitfor|watchpid|onevent|interrupt_level|kill_macro|insert_macro|get_macros_array|program_linecount|program_getlines|program_deletelines|program_insertlines|sqlquery|sqlconnect|sqlclose|sqlping|sql?|ansi_midstr|ansi_name|ansi_notify|ansi_notify_descriptor|ansi_notify_except|ansi_notify_exclude|ansi_strcut|ansi_strip|ansi_strlen|ansi_unparseobj|array_ansi_notify|escape_ansi|parse_ansi|unparse_ansi|base64encode|base64decode|httpdata|max_ignores|ignore_add|ignore_del|ignoring?|array_get_ignores|regmatch|array_regmatchkey|array_regmatchval|regfindnext|regfind_array|array_regfilter_prop|regexp|regsub|array_regsub|fwrite|fread|freadn|fappend|fcr|freadto|bwrite|bread|bappend|frm|fren|mkdir|fpublish|fsinfo|fstats|curid|fsize|getdir|rmdir|mcp_register|mcp_register|event|mcp_supports|mcp_bind|mcp_send|gui_available|gui_dlog_create|gui_dlog_show|gui_dlog_close|gui_ctrl_create|gui_values_set|gui_values_get|gui_value_get|gui_ctrl_command|addprop|getprop|setprop|envprop|remove_prop|getpropstr|getpropval|getpropfval|envpropstr|nextprop|desc|idesc|htmldesc|ihtmldesc|propdir?|setdesc|setsucc|setfail|setdrop|setosucc|setofail|setodrop|succ|fail|drop|osucc|ofail|odrop|getlockstr|ansidesc|setansidesc|iansidesc|setiansidesc|reflist_add|reflist_find|reflist_del|copyprops|exit|call|execute|read|public|sleep|pid|ispid?|kill|if|else|then|queue|fork|interp|caller|abort|case|trig|prog|parsempi|parseprop|cancall?|begin|until|repeat|while|break|continue|compiled?|tread|foreach|for|propqueue|envpropqueue|instances|magecall|wizcall|archcall|boycall|getpidinfo|getpids|try|catch|endcatch|jmp|enqueue|parsepropex|debug_on|debug_off|debug_line|selfcall|debugger_break|read_wants_blanks|get_read_wants_blanks|read_wants_blanks_toggle|read_wants_blanks_on|read_wants_blanks_off|catch_detailed|array_make|array_make_dict|array_interpret|array_explode|array_vals|array_keys|array_count|array_first|array_last|array_prev|array_next|array_getitem|array_setitem|array_appenditem|array_sort|array_getrange|array_setrange|array_insertrange|array?|array_delitem|array_delrange|array_nunion|array_union|array_nintersect|array_intersect|array_ndiff|array_diff|array_join|array_reverse|descr_array|dictionary?|array_get_propdirs|array_get_propvals|array_put_propvals|array_notify|array_get_proplist|array_put_proplist|array_insertitem|array_ansi_notify|array_get_reflist|array_put_reflist|array_join|array_notify_html|contents_array|exits_array|array_findval|find_array|entrances_array|online_array|array_excludeval|regfind_array|getobjinfo|getdescrinfo|array_extract|array_filter_flags|array_matchval|array_matchkey|array_filter_smart|array_filter_prop|array_regmatchval|array_regmatchkey|array_regsub|array_regfilter_prop|array_cut|array_compare|array_sort_indexed|array_nested_get|array_sum|array_getlinks|array_fmtstrings|array_nested_set|array_string_fragment|array_nested_del|}array|}list|}dict|}join|}cat|}tell|\[\]|\->\[\]|\[\]<\-|\[\^\]|\[x\]|\[..\]|\*\->\[\]|\*\[\]<\-|\*\[\^\]|\*\[x\])\b'
       scope: support.function.muf
       comment: just all the array functions :)
     - match: '(a(rray_(notify(_html)?|ansi_notify)|nsi_notify(_(exc(lude|ept)|descriptor))?)|notify(_(exc(lude|ept)|html(_(exc(lude(_nocr)?|ept)|nocr))?|descriptor(_char)?))?|descrflush|(stop|play)midi|(html_nocr_excep|commandtex)t)\b'
