@@ -1,0 +1,77 @@
+%YAML 1.2
+
+name: MUF
+file-extensions: [muf]
+scope: source.muf
+
+contexts:
+  prototype: 
+    - include: comment
+    - include: constants
+
+  main:
+    - match: \$(define|include|author|version|lib-version|def|enddef)
+      scope: keyword.preprocessor.muf 
+    - match: '\('
+      scope: punctuation.definition.comment.begin.muf
+      push: comment
+    - match: ':'
+      push: procedure-name
+  string:
+    - meta_scope: string.quoted.double.muf
+    - match: \\.
+      scope: constant.character.escape.muf
+    - match: '"'
+      pop: true
+  comment:
+    - meta_scope: comment.block.muf
+    - match: '\)'
+      pop: true
+  procedure-name:
+    - match: '\b([a-zA-Z][a-zA-Z0-9]*)\b'
+      scope: entity.name.function.muf
+      push: procedure-body
+  control-keywords:
+    - match: \bif\b
+      scope: keyword.control.conditional.muf
+      push:
+        - meta_scope: meta.block.muf
+        - include: expression
+        - match: \belse\b
+          scope: keyword.control.conditional.muf
+        - match: \bthen\b
+          scope: keyword.control.conditional.muf
+          pop: true
+  constants:
+    - match: '#[0-9]+'
+      scope: constant.other.placeholder.muf
+    - match: '[0-9]+(?:\.[0-9]*)?'
+      scope: constant.numeric.muf
+    - match: '"'
+      push:
+        - meta_scope: string.quoted.double.muf
+        - match: '"'
+          pop: true
+
+  operators:
+    - match: \b(dupn?|over|pick|\+\+?|\-\-?|/|(?:(?:bit)?(?:or|and|xor))|not|tuck|!|popn?|(?:<|>|!)=|@)\b
+      scope: keyword.operator.muf
+    - match: (notify|array_(?:setitem|getitem|getrange|setrange))
+      scope: support.function.muf
+    - match: '(ARRAY(\?|_(MA(TCH(VAL|KEY)|KE(_DICT)?)|RE(G(MATCH(VAL|KEY)|SUB|FILTER_PROP)|VERSE)|D(EL(RANGE|ITEM)|IFF)|(F(I(LTER_(PROP|FLAGS|SMART)|NDVAL|RST)|MTSTRING|GET(_(PROP((VAL|DIR)S|LIST)|REFLIST)|RANGE|ITEM|LINK)S)|(IN(SERT(RANGE|ITEM)|TER(SEC|PRE)|(EX(PLODE|CLUDEVAL|TRA|N(E(STED_(DEL|[GS]ET)|XT)|OTIFY(_HTML)?|DIFF|UNION|INTERSE)C|S(ET(RANGE|ITEM)|ORT(_INDEXED)?|UM|TRING_FRAGMEN|C(O(MPARE|UNT)|U)T)|P(UT_(PROP(VALS|LIST)|REFLIST)|REV)|A(PPENDITEM|NSI_NOTIFY)|(JOI|UNIO)N|(VAL|KEY)S|LAST))|array(\?|_(ma(tch(val|key)|ke(_dict)?)|re(g(match(val|key)|sub|filter_prop)|verse)|d(el(range|item)|iff)|(f(i(lter_(prop|flags|smart)|ndval|rst)|mtstring|get(_(prop((val|dir)s|list)|reflist)|range|item|link)s)|(in(sert(range|item)|ter(sec|pre)|(ex(plode|cludeval|tra|n(e(sted_(del|[gs]et)|xt)|otify(_html)?|diff|union|interse)c|s(et(range|item)|ort(_indexed)?|um|tring_fragmen|c(o(mpare|unt)|u)t)|p(ut_(prop(vals|list)|reflist)|rev)|a(ppenditem|nsi_notify)|(joi|unio)n|(val|key)s|last))|D(ICTIONARY\?|ESCR_ARRAY)|d(ictionary\?|escr_array)|GET(OBJ|DESCR)INFO|((REG)?FIND|ONLINE|(E(NTRANCE|XIT)|CONTENT)S)_ARRAY|get(obj|descr)info|((reg)?find|online|(e(ntrance|xit)|content)s)_array)))))))))))'
+      scope: support.function.muf
+      comment: just all the array functions :)
+    - match: '(a(rray_(notify(_html)?|ansi_notify)|nsi_notify(_(exc(lude|ept)|descriptor))?)|notify(_(exc(lude|ept)|html(_(exc(lude(_nocr)?|ept)|nocr))?|descriptor(_char)?))?|descrflush|(stop|play)midi|(html_nocr_excep|commandtex)t)\b'
+      scope: support.function.muf
+      comment: All IO functions.
+      
+  expression:
+    - include: control-keywords
+    - include: operators
+    - include: constants
+  procedure-body:
+    - include: expression
+    - meta_content_scope: meta.block.muf meta.function.muf
+    - match: ;
+      scope: punctuation.section.block.end.muf
+      pop: true
