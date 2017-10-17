@@ -3,7 +3,12 @@
 name: MUF
 file-extensions: [muf]
 scope: source.muf
-
+variables:
+  prims3: 'time|systime|timestamps|timesplit|timefmt|date|gmtoffset|systime_precise|atoi|dbref|int|intostr|ctoi|itoc|stod|dtos|float|strtof|ftostr|itoh|htoi|ftostrc|notify|notify_exclude|notify_except|ansi_notify|ansi_notify_exclude|ansi_notify_except|notify_html|notify_html_exclude|notify_html_except|notify_html_nocr|notify_html_exclude_nocr|html_nocr_except|notify_descriptor|array_notify|descrflush|stopmidi|playmidi|commandtext|array_ansi_notify|array_notify_html|ansi_notify_descriptor|notify_descriptor_char'
+  prims2: 'addprop|getprop|setprop|envprop|remove_prop|getpropstr|getpropval|getpropfval|envpropstr|nextprop|desc|idesc|htmldesc|ihtmldesc|propdir\?|setdesc|setsucc|setfail|setdrop|setosucc|setofail|setodrop|succ|fail|drop|osucc|ofail|odrop|getlockstr|ansidesc|setansidesc|iansidesc|setiansidesc|reflist_add|reflist_find|reflist_del|copyprops|exit|call|execute|read|public|sleep|pid|ispid\?|kill|queue|fork|interp|caller|abort|case|trig|prog|parsempi|parseprop|cancall\?|compiled\?|tread|propqueue|envpropqueue|instances|magecall|wizcall|archcall|boycall|getpidinfo|getpids|try|catch|endcatch|jmp|enqueue|parsepropex|debug_on|debug_off|debug_line|selfcall|debugger_break|read_wants_blanks|get_read_wants_blanks|read_wants_blanks_toggle|read_wants_blanks_on|read_wants_blanks_off|catch_detailed|dup|dupn|ldup|over|pop|rot|rotate|sort|swap|depth|number\?|dbref\?|int\?|string\?|address\?|socket\?|lock\?|float\?|variable\?|array\?|mark|}|checkargs|reverse|lreverse|popn|pick|put|descr\?|sql\?|mark\?|nip|tuck'
+  prims1: 'var|variable|variable\?|lvar|localvar|me|trigger|command|descr|var!|preempt|foreground|background|mode|setmode|pr_mode|fg_mode|bg_mode|sleep|event_wait|event_send|event_count|event_exists|timer_start|timer_stop|event_waitfor|watchpid|onevent|interrupt_level|random|bitor|bitxor|bitshift|ceil|floor|sqrt|pi|round|sin|cos|tan|asin|acos|atan|atan2|dist3d|xyz_to_polar|polar_to_xyz|exp|log|log10|fabs|pow|frand|fmod|modf|and|or|not|abs|srand|getseed|setseed|sign|xor|inf|epsilon'
+  oper: '\+|\-|\*|/|%|<|>|=|!=|<=|>=|\^|\@|(?<!var)\!|\+\+|\-\-'
+  primsrest: '\*\->\[\]|\*\[\]<\-|\*\[\^\]|\*\[x\]|\->\[\]|\[\.\.\]|\[\]|\[\]<\-|\[\^\]|\[x\]|addpennies|ansi_midstr|ansi_midstr|ansi_name|ansi_name|ansi_notify|ansi_notify_descriptor|ansi_notify_except|ansi_notify_exclude|ansi_strcut|ansi_strcut|ansi_strip|ansi_strip|ansi_strlen|ansi_strlen|ansi_unparseobj|ansi_unparseobj|armageddon|array\?|array_ansi_notify|array_ansi_notify|array_appenditem|array_compare|array_count|array_cut|array_delitem|array_delrange|array_diff|array_excludeval|array_explode|array_extract|array_filter_flags|array_filter_prop|array_filter_smart|array_findval|array_first|array_fmtstrings|array_get_ignores|array_get_propdirs|array_get_proplist|array_get_propvals|array_get_reflist|array_getitem|array_getlinks|array_getrange|array_insertitem|array_insertrange|array_interpret|array_intersect|array_join|array_join|array_keys|array_last|array_make|array_make_dict|array_matchkey|array_matchval|array_ndiff|array_nested_del|array_nested_get|array_nested_set|array_next|array_nintersect|array_notify|array_notify_html|array_nunion|array_prev|array_put_proplist|array_put_propvals|array_put_reflist|array_regfilter_prop|array_regmatchkey|array_regmatchval|array_regsub|array_reverse|array_setitem|array_setrange|array_sort|array_sort_indexed|array_string_fragment|array_sum|array_union|array_vals|awake\?|bandwidth|bappend|base64decode|base64encode|bread|bwrite|checkpassword|compile|conboot|concount|condbref|condescr|conhost|conidle|conipnum|connotify|conport|contents|contents_array|contents_array|contime|controls|conuser|copyobj|copyplayer|curid|dbcmp|dbtop|delta|descr|descr\?|descr_array|descr_flag\?|descr_html\?|descr_logout|descr_pueblo\?|descr_set|descr_setuser|descr_welcome_user|descrboot|descrbufsize|descrcon|descrconport|descrdbref|descrflush|descrhost|descridle|descripnum|descriptors|descrleastidle|descrmostidle|descrport|descrtime|descruser|dictionary\?|dump|entrances_array|entrances_array|escape_ansi|escape_ansi|escape_url|event|exit\?|exits|exits_array|exits_array|explode|fappend|fcr|find_array|find_array|findnext|firstdescr|flag\?|flag_2char|flag_2char|fmtstring|fmtstringex|force|force_level|fpublish|fread|freadn|freadto|fren|frm|fsinfo|fsize|fstats|fwrite|get_macros_array|get_sockinfo|getdescrinfo|getdescrinfo|getdir|getlink|getlinks|getlinks_array|getlockstr|getobjinfo|getobjinfo|gui_available|gui_ctrl_command|gui_ctrl_create|gui_dlog_close|gui_dlog_create|gui_dlog_show|gui_value_get|gui_values_get|gui_values_set|httpdata|ignore_add|ignore_del|ignoring\?|insert_macro|instr|instring|isflag\?|islocked\?|ispower\?|kill_macro|lastdescr|location|lock\?|locked\?|logstatus|lsock6open|lsockopen|match|max_ignores|mcp_bind|mcp_register|mcp_register|mcp_send|mcp_supports|md5hash|midstr|mkdir|mlevel|motd_notify|movepennies|moveto|name|name\-ok\?|name\-ok\?|nbsock6open|nbsockopen|newexit|newobject|newpassword|newplayer|newprogram|newroom|next|next_flag|nextdescr|nextentrance|nextexit|nextowned|nextowned_flag|nextplayer|nextplayer_flag|nextplayer_power|nextprogram|nextroom|nextthing|nextthing_flag|objmem|ok\?|online|online_array|owner|parse_ansi|parse_ansi|parse_neon|parselock|part_pmatch|pennies|player\?|pmatch|pname\-ok\?|pname\-ok\?|power\?|power_2char|power_2char|prettylock|program\?|program_deletelines|program_getlines|program_insertlines|program_linecount|pronoun_sub|recycle|refstamps|regexp|regfind_array|regfind_array|regfindnext|regmatch|regsub|restart|rinstr|rinstring|rmatch|rmdir|room\?|rsplit|set|set_sockopt|setlink|setlockstr|setname|setown|setpassword|setsysparm|sha1hash|shutdown|smatch|sock6open|sockaccept|sockcheck|sockclose|socket_setuser|sockopen|sockrecv|socksecure|socksend|sockshutdown|socktodescr|sockunsecure|split|sql\?|sqlclose|sqlconnect|sqlping|sqlquery|ssl_sockaccept|stats|strcat|strcmp|strcut|strdecrypt|strencrypt|stringcmp|stringpfx|strip|striplead|stripspaces|striptail|strlen|strncmp|subst|suid|sysparm|sysparm_array|testlock|textattr|thing\?|timestamps|toadplayer|tokensplit|tolower|touch|toupper|udp6send|udpclose|udpopen|udpsend|uncompile|unescape_url|unparse_ansi|unparse_ansi|unparselock|unparseobj|use|version|}array|}cat|}dict|}join|}list|}tell'
 contexts:
   prototype: 
     - include: comment
@@ -12,25 +17,21 @@ contexts:
   main:
     - match: \$(define|include|author|version|lib-version|def|enddef)
       scope: keyword.preprocessor.muf 
-    - match: '\('
-      scope: punctuation.definition.comment.begin.muf
-      push: comment
     - match: ':'
+      scope: keyword.operator.muf
       push: procedure-name
-  string:
-    - meta_scope: string.quoted.double.muf
-    - match: \\.
-      scope: constant.character.escape.muf
-    - match: '"'
-      pop: true
   comment:
-    - meta_scope: comment.block.muf
-    - match: '\)'
-      pop: true
+    - match: '\('
+      scope: punctuation.comment.begin.muf
+      push:
+      - meta_scope: comment.block.muf
+      - match: '\)'
+        scope: punctuation.comment.end.muf
+        pop: true
   procedure-name:
     - match: '\b([a-zA-Z][a-zA-Z0-9]*)\b'
       scope: entity.name.function.muf
-      push: procedure-body
+      set: procedure-body
   control-keywords:
     - match: \bif\b
       scope: keyword.control.conditional.muf
@@ -42,7 +43,7 @@ contexts:
         - match: \bthen\b
           scope: keyword.control.conditional.muf
           pop: true
-    - match: \bbegin\b
+    - match: '\b(begin|for(?:each)?)\b'
       scope: keyword.control.muf
       push:
         - meta_scope: meta.block.muf
@@ -50,6 +51,8 @@ contexts:
         - match: \b(until|repeat)\b
           scope: keyword.control.muf
           pop: true
+        - match: '\b(while|break|continue)\b'
+          scope: keyword.control.muf
   constants:
     - match: '#[0-9]+'
       scope: constant.other.placeholder.muf
@@ -58,26 +61,26 @@ contexts:
     - match: '"'
       push:
         - meta_scope: string.quoted.double.muf
+        - meta_include_prototype: false
         - match: '"'
           pop: true
 
-  operators:
-    - match: \b(\+|\-|\*|/|%|<|>|=|!=|<=|>=|\^|RANDOM|BITOR|BITXOR|BITSHIFT|\+\+|\-\-|CEIL|FLOOR|SQRT|PI|ROUND|SIN|COS|TAN|ASIN|ACOS|ATAN|ATAN2|DIST3D|XYZ_TO_POLAR|POLAR_TO_XYZ|EXP|LOG|LOG10|FABS|POW|FRAND|FMOD|MODF|AND|OR|NOT|ABS|SRAND|GETSEED|SETSEED|SIGN|XOR|INF|EPSILON|VAR|VARIABLE|VARIABLE\?|LVAR|LOCALVAR|@|!|ME|TRIGGER|COMMAND|DESCR|VAR!)\b
-      scope: keyword.operator.muf
-    - match: '\b(preempt|foreground|background|mode|setmode|pr_mode|fg_mode|bg_mode|sleep|event_wait|event_send|event_count|event_exists|timer_start|timer_stop|event_waitfor|watchpid|onevent|interrupt_level|kill_macro|insert_macro|get_macros_array|program_linecount|program_getlines|program_deletelines|program_insertlines|sqlquery|sqlconnect|sqlclose|sqlping|sql?|ansi_midstr|ansi_name|ansi_notify|ansi_notify_descriptor|ansi_notify_except|ansi_notify_exclude|ansi_strcut|ansi_strip|ansi_strlen|ansi_unparseobj|array_ansi_notify|escape_ansi|parse_ansi|unparse_ansi|base64encode|base64decode|httpdata|max_ignores|ignore_add|ignore_del|ignoring?|array_get_ignores|regmatch|array_regmatchkey|array_regmatchval|regfindnext|regfind_array|array_regfilter_prop|regexp|regsub|array_regsub|fwrite|fread|freadn|fappend|fcr|freadto|bwrite|bread|bappend|frm|fren|mkdir|fpublish|fsinfo|fstats|curid|fsize|getdir|rmdir|mcp_register|mcp_register|event|mcp_supports|mcp_bind|mcp_send|gui_available|gui_dlog_create|gui_dlog_show|gui_dlog_close|gui_ctrl_create|gui_values_set|gui_values_get|gui_value_get|gui_ctrl_command|addprop|getprop|setprop|envprop|remove_prop|getpropstr|getpropval|getpropfval|envpropstr|nextprop|desc|idesc|htmldesc|ihtmldesc|propdir?|setdesc|setsucc|setfail|setdrop|setosucc|setofail|setodrop|succ|fail|drop|osucc|ofail|odrop|getlockstr|ansidesc|setansidesc|iansidesc|setiansidesc|reflist_add|reflist_find|reflist_del|copyprops|exit|call|execute|read|public|sleep|pid|ispid?|kill|if|else|then|queue|fork|interp|caller|abort|case|trig|prog|parsempi|parseprop|cancall?|begin|until|repeat|while|break|continue|compiled?|tread|foreach|for|propqueue|envpropqueue|instances|magecall|wizcall|archcall|boycall|getpidinfo|getpids|try|catch|endcatch|jmp|enqueue|parsepropex|debug_on|debug_off|debug_line|selfcall|debugger_break|read_wants_blanks|get_read_wants_blanks|read_wants_blanks_toggle|read_wants_blanks_on|read_wants_blanks_off|catch_detailed|array_make|array_make_dict|array_interpret|array_explode|array_vals|array_keys|array_count|array_first|array_last|array_prev|array_next|array_getitem|array_setitem|array_appenditem|array_sort|array_getrange|array_setrange|array_insertrange|array?|array_delitem|array_delrange|array_nunion|array_union|array_nintersect|array_intersect|array_ndiff|array_diff|array_join|array_reverse|descr_array|dictionary?|array_get_propdirs|array_get_propvals|array_put_propvals|array_notify|array_get_proplist|array_put_proplist|array_insertitem|array_ansi_notify|array_get_reflist|array_put_reflist|array_join|array_notify_html|contents_array|exits_array|array_findval|find_array|entrances_array|online_array|array_excludeval|regfind_array|getobjinfo|getdescrinfo|array_extract|array_filter_flags|array_matchval|array_matchkey|array_filter_smart|array_filter_prop|array_regmatchval|array_regmatchkey|array_regsub|array_regfilter_prop|array_cut|array_compare|array_sort_indexed|array_nested_get|array_sum|array_getlinks|array_fmtstrings|array_nested_set|array_string_fragment|array_nested_del|}array|}list|}dict|}join|}cat|}tell|\[\]|\->\[\]|\[\]<\-|\[\^\]|\[x\]|\[..\]|\*\->\[\]|\*\[\]<\-|\*\[\^\]|\*\[x\])\b'
+  operator:
+    - match: '\s+({{oper}})\s+'
+      scope: keyword.operator.arithmetic.muf
+
+  support:
+    - match: \b({{prims1}}|{{prims2}}|{{prims3}}|{{primsrest}})\b
       scope: support.function.muf
-      comment: just all the array functions :)
-    - match: '(a(rray_(notify(_html)?|ansi_notify)|nsi_notify(_(exc(lude|ept)|descriptor))?)|notify(_(exc(lude|ept)|html(_(exc(lude(_nocr)?|ept)|nocr))?|descriptor(_char)?))?|descrflush|(stop|play)midi|(html_nocr_excep|commandtex)t)\b'
-      scope: support.function.muf
-      comment: All IO functions.
-      
   expression:
-    - include: control-keywords
-    - include: operators
+    - include: operator
+    - include: control-keywords 
+    - include: support
     - include: constants
+
   procedure-body:
+    - meta_scope: meta.function.muf meta.block.muf 
     - include: expression
-    - meta_content_scope: meta.block.muf meta.function.muf
-    - match: ;
+    - match: \;
       scope: punctuation.section.block.end.muf
       pop: true
