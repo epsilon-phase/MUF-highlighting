@@ -43,6 +43,21 @@ contexts:
         - match: \bthen\b
           scope: keyword.control.conditional.muf
           pop: true
+    - match: \bcase\b
+      scope: keyword.control.conditional.muf
+      push:
+        - meta_scope: meta.block.muf
+        - include: expression
+        - match: \b(when|default)\b
+          scope: keyword.control.conditional.muf
+          push:
+            - meta_scope: meta.group.muf
+            - include: expression
+            - match: \bend\b
+              pop: true
+        - match: \bendcase\b
+          scope: keyword.control.conditional.muf punctuation.section.block.end.muf
+          pop: true
     - match: '\b(begin|for(?:each)?)\b'
       scope: keyword.control.muf
       push:
