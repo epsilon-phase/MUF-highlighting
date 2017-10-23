@@ -81,13 +81,14 @@ class Cache():
         tc.write(programListCommand.format(fn))
         mindex = 0
         lines = []
-        lastindex=0
+        lastindex = 0
         while mindex != 1:
-            mindex, match, _ = tc.expect([programListMatch, programListTerminator])
+            mindex, match, _ = tc.expect([programListMatch,
+                                          programListTerminator])
             if mindex != 1:
                 if int(math.group(2)) != lastindex + 1:
                     print("Hmm. There might be a problem.")
                 else:
-                    lastindex = int(match.group(2))
+                    lastindex = int(match.group(1))
                 lines.append(match.group(2))
 
