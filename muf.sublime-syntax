@@ -20,6 +20,13 @@ contexts:
     - match: ':'
       scope: keyword.operator.muf
       push: procedure-name
+    - match: 'public '
+      scope: keyword.other.muf
+      push:
+        - match: '[a-zA-Z][a-zA-Z0-9@\*]+'
+          scope: entity.name.trait
+          pop: true
+        - match: \n
   comment:
     - match: '\('
       scope: punctuation.comment.begin.muf

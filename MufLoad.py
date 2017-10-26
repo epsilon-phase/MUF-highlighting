@@ -1,18 +1,22 @@
 #!/bin/python3
 
-import telnetlib
+from telnetlib import Telnet
 import re
-from hashlib import sha3_512
+from hashlib import sha512
+from typing import *
+from time import sleep
 prognameMatch = re.compile("\(\(\( filename: (.+) \)\)\)")
 progDependencyMatch = re.compile("\(\(\( dependsOn: (.+) \)\)\)")
-programFinder = "@find {}"
-programFinderRegex = re.compile("(.+)\([0-9]+).+")
-programFinderTerminator = re.compile('\*\*\*End of List\*\*\*')
-ProgramId = re.compile("Program .+ created with number ([0-9]+)")
+programFinder = "@find {}\n"
+programFinderRegex = re.compile(b"(.+)([0-9]+):.+")
+programFinderTerminator = re.compile(b'\*\*\*End of List\*\*\*')
+ProgramId = re.compile(b"Program .+ created with number ([0-9]+)")
+ProgramId2 = re.compile(
+    b'Entering editor for .+\(#([0-9]+).+\)\.$')
 # Command to list content of a program, showing line numbers
-programListCommand = "@list {}=#"
-programListMatch = re.compile("^\s+([0-9]+):(.+)$")
-programListTerminator = re.compile("[0-9]+ lines displayed\.")
+programListCommand = b"@list {}=#\n"
+programListMatch = re.compile(b"^\s+([0-9]+):(.+)$")
+programListTerminator = re.compile(b"[0-9]+ lines displayed\.")
 # Goals:
 #    Manage Dependencies:
 #        Upload changed files in necessary order
@@ -24,13 +28,14 @@ programListTerminator = re.compile("[0-9]+ lines displayed\.")
 #   Provide cleanup functionality for things that totally fuck up the system
 
 
-class File():
-    def __init__(self, filename):
+class MufFile():
+    def __init__(self, filename, depth=0, parent=None):
         self.dependencies = []
         self.transformedname = ""
         self.filename = filename
-        self.hash = sha3_512()
+        self.hash = sha512()
         self.length = 0
+        self.parent = parent
         with open(filename) as file:
             for z in file.readlines():
                 pnmatch = prognameMatch.match(z)
@@ -38,13 +43,26 @@ class File():
                     self.transformedname = pnmatch.group(1)
                 pdepmatch = progDependencyMatch.match(z)
                 if pdepmatch is not None:
-                    self.dependencies.append(File(pdepmatch.group(1)))
-                self.hash.update(z)
+                    self.dependencies.append(pdepmatch.group(1))
+                self.hash.update(z.encode())
                 self.length += 1
         self.hash = self.hash.hexdigest()
 
-    def send(self, tc: telnetlib.Telnet):
-        return None
+    def send(self, tc: Telnet):
+        tc.write("@prog {}\n".format(self.transformedname).encode())
+        mindex, match, _ = tc.expect([ProgramId, ProgramId2], timeout=3)
+        if match is not None:
+            self.id = int(match.group(1))
+
+        tc.write("1 {} delete\n".format(self.length * 10).encode())
+        tc.write("i\n".encode())
+        with open(self.filename) as fi:
+            for i in fi.readlines():
+                tc.write("{}\n".format(i).encode())
+                sleep(0.05)
+        tc.write('.\n'.encode())
+        tc.write("c\n".encode())
+        tc.write("q\n".encode())
 
 
 # Keep track of whether or not files are up to date on the server.
@@ -59,14 +77,14 @@ class Cache():
             # probably doesn't exist
             pass
 
-    def addFile(self, file: File):
+    def addFile(self, file: MufFile):
         fname = file.filename
         if fname in self.oldfiles.keys():
             if self.newfiles[fname].hash != file.hash:
                 self.oldfiles[fname] = self.newfiles[fname]
                 self.newfiles[fname] = file
 
-    def syncOld(self, file: File, tc: telnetlib.Telnet):
+    def syncOld(self, file: MufFile, tc: Telnet):
         tc.write(programFinder.format(file.filename))
         mindex, match, _ = tc.expect([programFinderRegex,
                                       programFinderTerminator])
@@ -92,3 +110,48 @@ class Cache():
                     lastindex = int(match.group(1))
                 lines.append(match.group(2))
 
+
+class DepGraph():
+    def __init__(self):
+        self.nodes = {}
+        self.edges = {}
+        self.depths = {}
+        self.validstarts = set()
+
+    def addFile(self, file: MufFile, depth=0):
+        self.nodes[file.filename] = file
+        if file.filename not in self.edges.keys():
+            self.edges[file.filename] = set()
+            self.depths[file.filename] = depth
+            if depth == 0:
+                self.validstarts.add(file.filename)
+        for fn in file.dependencies:
+            self.edges[file.filename].add(fn)
+            if fn not in self.nodes.keys():
+                self.addFile(MufFile(fn, depth=depth + 1), depth + 1)
+
+    def send(self, tc: Telnet):
+        stack = list()
+        path = []
+        sent = set()
+        for i in self.validstarts:
+            stack.append(i)
+            while len(stack) > 0:
+                cn = stack.pop()
+                if cn not in path:
+                    path.append(cn)
+                else:
+                    continue
+                for n in self.edges[cn]:
+                    path.append(n)
+                    stack.append(n)
+            for n in reversed(path):
+                print("Updating program {}".format(n))
+                self.nodes[n].send(tc)
+
+
+tc = Telnet(host="localhost", port=2001)
+tc.write(b"connect one potrzebie\n")
+dg = DepGraph()
+dg.addFile(MufFile("Channel/Channel.muf"))
+dg.send(tc)
