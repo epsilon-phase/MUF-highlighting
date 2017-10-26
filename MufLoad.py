@@ -5,8 +5,10 @@ import re
 from hashlib import sha512
 from typing import *
 from time import sleep
+import argparse
 prognameMatch = re.compile("\(\(\( filename: (.+) \)\)\)")
 progDependencyMatch = re.compile("\(\(\( dependsOn: (.+) \)\)\)")
+progIncludeMatch = re.compile('\(\(\( includes: (.+) as (\.\.[a-zA-Z0-9-]+) \)\)\)')
 programFinder = "@find {}\n"
 programFinderRegex = re.compile(b"(.+)([0-9]+):.+")
 programFinderTerminator = re.compile(b'\*\*\*End of List\*\*\*')
@@ -149,7 +151,8 @@ class DepGraph():
                 print("Updating program {}".format(n))
                 self.nodes[n].send(tc)
 
-
+argInterpret=argparse.ArgumentParser()
+argInterpret.add_argument()
 tc = Telnet(host="localhost", port=2001)
 tc.write(b"connect one potrzebie\n")
 dg = DepGraph()
