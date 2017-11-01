@@ -64,7 +64,6 @@ class MufFile():
 
         tc.write("1 {} delete\n".format(self.length * 10).encode())
         tc.write("i\n".encode())
-        first=True
         with open(self.filename) as fi:
             for i in fi.readlines():
                 tc.write("{}".format(i).encode())
