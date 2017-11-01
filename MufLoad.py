@@ -38,14 +38,20 @@ class MufFile():
         self.hash = sha512()
         self.length = 0
         self.parent = parent
+        self.includes = {}
         with open(filename) as file:
             for z in file.readlines():
                 pnmatch = prognameMatch.match(z)
                 if pnmatch is not None:
                     self.transformedname = pnmatch.group(1)
+                    continue
                 pdepmatch = progDependencyMatch.match(z)
                 if pdepmatch is not None:
                     self.dependencies.append(pdepmatch.group(1))
+                    continue
+                pincMatch = progIncludeMatch.match(z)
+                if pincMatch is not None:
+                    self.includes[pincMatch.group(2)] = pincMatch.group(1)
                 self.hash.update(z.encode())
                 self.length += 1
         self.hash = self.hash.hexdigest()
@@ -58,10 +64,12 @@ class MufFile():
 
         tc.write("1 {} delete\n".format(self.length * 10).encode())
         tc.write("i\n".encode())
+        first=True
         with open(self.filename) as fi:
             for i in fi.readlines():
-                tc.write("{}\n".format(i).encode())
+                tc.write("{}".format(i).encode())
                 sleep(0.05)
+        tc.write('\n'.encode())
         tc.write('.\n'.encode())
         tc.write("c\n".encode())
         tc.write("q\n".encode())
@@ -151,8 +159,14 @@ class DepGraph():
                 print("Updating program {}".format(n))
                 self.nodes[n].send(tc)
 
-argInterpret=argparse.ArgumentParser()
-argInterpret.add_argument()
+# TODO: Use a cache to check if the file needs to be uploaded again,
+#  I.E. it's hash has changed.
+# TODO: define a macro on the copy sent to the server such that each
+#  program refers to the correct id at runtime.
+
+
+#argInterpret = argparse.ArgumentParser()
+#argInterpret.add_argument()
 tc = Telnet(host="localhost", port=2001)
 tc.write(b"connect one potrzebie\n")
 dg = DepGraph()
