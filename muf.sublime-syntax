@@ -38,7 +38,7 @@ contexts:
         scope: punctuation.comment.end.muf
         pop: true
   procedure-name:
-    - match: '\b([a-zA-Z][a-zA-Z0-9]*)\b'
+    - match: '\b([a-zA-Z][a-zA-Z0-9\_\-]*)\b'
       scope: entity.name.function.muf
       set: procedure-body
   control-keywords:
