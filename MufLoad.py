@@ -5,6 +5,8 @@ import re
 from hashlib import sha512
 from typing import *
 from time import sleep
+from os import stat
+import yaml
 import argparse
 prognameMatch = re.compile("\(\(\( filename: (.+) \)\)\)")
 progDependencyMatch = re.compile("\(\(\( dependsOn: (.+) \)\)\)")
@@ -16,8 +18,8 @@ ProgramId = re.compile(b"Program .+ created with number ([0-9]+)")
 ProgramId2 = re.compile(
     b'Entering editor for .+\(#([0-9]+).+\)\.$')
 # Command to list content of a program, showing line numbers
-programListCommand = b"@list {}=#\n"
-programListMatch = re.compile(b"^\s+([0-9]+):(.+)$")
+programListCommand = "@list {}\n"
+programListMatch = re.compile(b"\s*([0-9]+):(.+)\r\n")
 programListTerminator = re.compile(b"[0-9]+ lines displayed\.")
 # Goals:
 #    Manage Dependencies:
@@ -67,11 +69,33 @@ class MufFile():
         with open(self.filename) as fi:
             for i in fi.readlines():
                 tc.write("{}".format(i).encode())
-                sleep(0.05)
+#                sleep(0.05)
         tc.write('\n'.encode())
         tc.write('.\n'.encode())
         tc.write("c\n".encode())
         tc.write("q\n".encode())
+    @staticmethod
+    def sync(filename,remoteid, tc: Telnet):
+        tc.read_very_eager()
+        tc.write(b"@set me=H\n")
+        tc.write(b"pub #alloff\n")
+        sleep(2)
+        tc.write(programListCommand.format(remoteid).encode())
+        print(programListCommand.format(remoteid))
+        with open(filename, 'w') as output:
+            lines=tc.read_until(b" lines displayed.").decode().split('\r\n')
+            for i in lines[:-1]:
+                output.write(i + '\n')
+#            mindex = 0
+#            while mindex < 1:
+#                mindex, match, _ = tc.expect([programListMatch,
+#                                               programListTerminator])
+#                if mindex >= 1 \
+#                   or match is None:
+#                    break
+#                output.write(match.group(2).decode()+'\n')
+
+
 
 
 # Keep track of whether or not files are up to date on the server.
@@ -166,8 +190,30 @@ class DepGraph():
 
 #argInterpret = argparse.ArgumentParser()
 #argInterpret.add_argument()
-tc = Telnet(host="localhost", port=2001)
-tc.write(b"connect one potrzebie\n")
-dg = DepGraph()
-dg.addFile(MufFile("Channel/Channel.muf"))
-dg.send(tc)
+#tc = Telnet(host="localhost", port=2001)
+#tc.write(b"connect one potrzebie\n")
+#dg = DepGraph()
+#dg.addFile(MufFile("Channel/Channel.muf"))
+#dg.send(tc)
+
+with open('project.yaml') as projfile:
+    project = yaml.load(projfile)
+    print(project)
+    project = project['project']
+    tc = Telnet(host=project['connect']['host'],
+                port=int(project['connect']['port']))
+    tc.read_some()
+    tc.write("connect {} {}\n".format(project['connect']['username'],
+                                      project['connect']['password']).encode())
+    print("connect {} {}".format(project['connect']['username'],
+                                 project['connect']['password']))
+    sleep(5)
+    for i in project['sync']:
+        if 'no_exist' in i['file'].keys() and i['file']['no_exist']:
+            try:
+                stat(i['file']['name'])
+                print('skipping {}'.format(i['file']['name']))
+                continue
+            except FileNotFoundError:
+                print('need to get {}'.format(i['file']['name']))
+        MufFile.sync(i['file']['name'], i['file']['id'], tc)
