@@ -66,10 +66,16 @@ class MufFile():
 
         tc.write("1 {} delete\n".format(self.length * 10).encode())
         tc.write("i\n".encode())
+        counter = 0
         with open(self.filename) as fi:
-            for i in fi.readlines():
+            lines = fi.readlines()
+            for i in lines:
                 tc.write("{}".format(i).encode())
                 sleep(0.05)
+                counter += 1
+                if counter % 10 == 0:
+                    print("{}%".format(100*counter / len(lines)),
+                          end='\r', flush=True)
         print("finished sending")
         tc.write('.\n'.encode())
         sleep(0.1)
@@ -78,6 +84,7 @@ class MufFile():
         sleep(0.1)
         print("quitting")
         tc.write("q\n".encode())
+        sleep(0.1)
 
 
     @staticmethod
@@ -230,4 +237,5 @@ with open('project.yaml') as projfile:
     for i in project['send']:
         f = MufFile(i['file']['name'])
         f.transformedname = i['file']['gamename']
+        print("Sending " + f.transformedname)
         f.send(tc)
