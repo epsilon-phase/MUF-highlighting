@@ -69,23 +69,33 @@ class MufFile():
         with open(self.filename) as fi:
             for i in fi.readlines():
                 tc.write("{}".format(i).encode())
-#                sleep(0.05)
-        tc.write('\n'.encode())
+                sleep(0.05)
+        print("finished sending")
         tc.write('.\n'.encode())
+        sleep(0.1)
+        print("compiling program")
         tc.write("c\n".encode())
+        sleep(0.1)
+        print("quitting")
         tc.write("q\n".encode())
+
+
     @staticmethod
     def sync(filename,remoteid, tc: Telnet):
         tc.read_very_eager()
         tc.write(b"@set me=H\n")
         tc.write(b"pub #alloff\n")
         sleep(2)
+        tc.read_very_eager()
         tc.write(programListCommand.format(remoteid).encode())
         print(programListCommand.format(remoteid))
         with open(filename, 'w') as output:
-            lines=tc.read_until(b" lines displayed.").decode().split('\r\n')
+            lines = tc.read_until(b" lines displayed.").decode().split('\r\n')
             for i in lines[:-1]:
                 output.write(i + '\n')
+        tc.write(b"pub #allon")
+        tc.write(b"@set me=!H")
+        tc.read_very_eager()
 #            mindex = 0
 #            while mindex < 1:
 #                mindex, match, _ = tc.expect([programListMatch,
@@ -217,3 +227,7 @@ with open('project.yaml') as projfile:
             except FileNotFoundError:
                 print('need to get {}'.format(i['file']['name']))
         MufFile.sync(i['file']['name'], i['file']['id'], tc)
+    for i in project['send']:
+        f = MufFile(i['file']['name'])
+        f.transformedname = i['file']['gamename']
+        f.send(tc)
