@@ -5,9 +5,10 @@ import re
 from hashlib import sha512
 from typing import *
 from time import sleep
-from os import stat
+from os import stat, path
 import yaml
 import argparse
+import datetime
 prognameMatch = re.compile("\(\(\( filename: (.+) \)\)\)")
 progDependencyMatch = re.compile("\(\(\( dependsOn: (.+) \)\)\)")
 progIncludeMatch = re.compile('\(\(\( includes: (.+) as (\.\.[a-zA-Z0-9-]+) \)\)\)')
@@ -21,6 +22,20 @@ ProgramId2 = re.compile(
 programListCommand = "@list {}\n"
 programListMatch = re.compile(b"\s*([0-9]+):(.+)\r\n")
 programListTerminator = re.compile(b"[0-9]+ lines displayed\.")
+
+editorInsertExitMatch = [re.compile(b"Exiting insert mode\.")]
+editorCompilerStringMatch = [re.compile(b"Compiler done\.")]
+editorExitStringMatch = [re.compile(b"Editor exited\.")]
+
+objectModifiedStringFieldMatch = \
+    [
+        re.compile(b"Modified: (.+) by (.+)$"),
+        re.compile(b"I don't see that there\.$")
+    ]
+objectModificationCommand = "ex {}\n"
+
+functionListCommand = "@listfunc {}\n"
+functionListRegex = re.compile("\x1b\[[^m]*m")
 # Goals:
 #    Manage Dependencies:
 #        Upload changed files in necessary order
@@ -31,6 +46,56 @@ programListTerminator = re.compile(b"[0-9]+ lines displayed\.")
 #             (This will be hard to do properly in a very noisy server)
 #   Provide cleanup functionality for things that totally fuck up the system
 
+
+# Current stuff that needs doing
+# [x] Determine if file needs to be updated due to the program being modified
+#     since it was last retrieved.
+# [ ] Better latency handling for the editor commands.
+#    a. expect/error loop until match is found
+#    b. Maybe the telnet class could do with a wrapper class
+#       for handling this automatically.
+# 3. 
+
+class SyncException(Exception):
+    def __init__(self, filename, remoteid):
+        super(Exception, self).__init__(filename, remoteid)
+        self.message = "The object with id {} associated with {}".\
+            format(remoteid, filename) + \
+            " could not be found"
+
+
+def because_I_cant_understand_strptime(s:str):
+    months = {
+        "Jan": 1,
+        "Feb": 2,
+        "Mar": 3,
+        "Apr": 4,
+        "May": 5,
+        "Jun": 6,
+        "Jul": 7,
+        "Aug": 8,
+        "Sep": 9,
+        "Oct": 10,
+        "Nov": 11,
+        "Dec": 12
+    }
+    m = re.compile("(Sat|Sun|Mon|Tue|Wed|Thu|Fri) " +
+                   "(Jan|Feb|Mar|Apr|May|Jun|Jul" +
+                   "|Aug|Sep|Oct|Nov|Dec) " +
+                   "([123 ][0-9]) " +
+                   "([012 ][0-9]):" +
+                   "([0-5][0-9]):" +
+                   "([0-5][0-9]) " +
+                   "(CST|CDT) " +
+                   "([0-9]+)").match(s)
+    month = months[m.group(2)]
+    monthday = int(m.group(3))
+    hour = int(m.group(4))
+    minute = int(m.group(5))
+    second = int(m.group(6))
+    year = int(m.group(7))
+    dt = datetime.datetime(year, month, day, hour, minute, second)
+    return dt
 
 class MufFile():
     def __init__(self, filename, depth=0, parent=None):
@@ -74,21 +139,45 @@ class MufFile():
                 sleep(0.05)
                 counter += 1
                 if counter % 10 == 0:
-                    print("{}%".format(100*counter / len(lines)),
+                    print("{}%".format(100 * counter / len(lines)),
                           end='\r', flush=True)
+        print("\n", end="", flush=True)
         print("finished sending")
-        tc.write('.\n'.encode())
-        sleep(0.1)
+        while True:
+            tc.write('.\n'.encode())
+            index, m, _ = tc.expect(editorInsertExitMatch,
+                                    timeout=5)
+            if m is not None:
+                break
         print("compiling program")
-        tc.write("c\n".encode())
-        sleep(0.1)
+        while True:
+            tc.write("c\n".encode())
+            index, m, _ = tc.expect(editorCompilerStringMatch,
+                                    timeout=7)
+            if m is not None:
+                break
         print("quitting")
-        tc.write("q\n".encode())
-        sleep(0.1)
-
+        while True:
+            tc.write("q\n".encode())
+            index, m, _ = tc.expect(editorExitStringMatch,
+                                    timeout=7)
+            if m is not None:
+                break
 
     @staticmethod
-    def sync(filename,remoteid, tc: Telnet):
+    def check_last_modified(filename, remoteid, tc: Telnet):
+        tc.send(objectModificationCommand.format(remoteid).encode())
+        idx, match, _ = tc.expect(objectModifiedStringFieldMatch)
+        if idx == 1:
+            raise SyncException(filename, remoteid)
+        #mod_date = datetime.datetime.strptime(match.group(1),
+        #                                      "%a %b %d %H:%M:%S %Z %Y")
+        mod_date = because_I_cant_understand_strptime(match.group(1))
+        local_stuff = path.getmtime(filename)
+        return mod_date >= local_stuff
+
+    @staticmethod
+    def sync(filename, remoteid, tc: Telnet):
         tc.read_very_eager()
         tc.write(b"@set me=H\n")
         tc.write(b"pub #alloff\n")
