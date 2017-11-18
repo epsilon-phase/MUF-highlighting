@@ -17,7 +17,7 @@ programFinderRegex = re.compile(b"(.+)([0-9]+):.+")
 programFinderTerminator = re.compile(b'\*\*\*End of List\*\*\*')
 ProgramId = re.compile(b"Program .+ created with number ([0-9]+)")
 ProgramId2 = re.compile(
-    b'Entering editor for .+\(#([0-9]+).+\)\.$')
+    b'Entering editor for .+\(#([0-9]+).+\)\.')
 # Command to list content of a program, showing line numbers
 programListCommand = "@list {}\n"
 programListMatch = re.compile(b"\s*([0-9]+):(.+)\r\n")
@@ -124,11 +124,12 @@ class MufFile():
         self.hash = self.hash.hexdigest()
 
     def send(self, tc: Telnet):
-        tc.write("@prog {}\n".format(self.transformedname).encode())
-        mindex, match, _ = tc.expect([ProgramId, ProgramId2], timeout=3)
-        if match is not None:
-            self.id = int(match.group(1))
-
+        while True:
+            tc.write("@prog {}\n".format(self.transformedname).encode())
+            mindex, match, _ = tc.expect([ProgramId, ProgramId2], timeout=3)
+            if match is not None:
+                self.id = int(match.group(1))
+                break
         tc.write("1 {} delete\n".format(self.length * 10).encode())
         tc.write("i\n".encode())
         counter = 0
@@ -136,7 +137,7 @@ class MufFile():
             lines = fi.readlines()
             for i in lines:
                 tc.write("{}".format(i).encode())
-                sleep(0.05)
+#                sleep(0.05)
                 counter += 1
                 if counter % 10 == 0:
                     print("{}%".format(100 * counter / len(lines)),
@@ -328,3 +329,5 @@ with open('project.yaml') as projfile:
         f.transformedname = i['file']['gamename']
         print("Sending " + f.transformedname)
         f.send(tc)
+        sleep(1)
+        print("\a")

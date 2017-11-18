@@ -4,7 +4,7 @@ name: MUF
 file-extensions: [muf]
 scope: source.muf
 variables:
-  prims3: 'time|systime|timestamps|timesplit|timefmt|date|gmtoffset|systime_precise|atoi|dbref|int|intostr|ctoi|itoc|stod|dtos|float|strtof|ftostr|itoh|htoi|ftostrc|notify|notify_exclude|notify_except|ansi_notify|ansi_notify_exclude|ansi_notify_except|notify_html|notify_html_exclude|notify_html_except|notify_html_nocr|notify_html_exclude_nocr|html_nocr_except|notify_descriptor|array_notify|descrflush|stopmidi|playmidi|commandtext|array_ansi_notify|array_notify_html|ansi_notify_descriptor|notify_descriptor_char'
+  prims3: 'time|systime|timestamps|timesplit|timefmt|date|gmtoffset|systime_precise|atoi|dbref|int|intostr|ctoi|itoc|stod|dtos|float|strtof|ftostr|itoh|htoi|ftostrc|notify|notify_exclude|notify_except|ansi_notify|ansi_notify_exclude|ansi_notify_except|notify_html|notify_html_exclude|notify_html_except|notify_html_nocr|notify_html_exclude_nocr|html_nocr_except|notify_descriptor|array_notify|descrflush|stopmidi|playmidi|commandtext|array_ansi_notify|array_notify_html|ansi_notify_descriptor|notify_descriptor_char|explode_array'
   prims2: 'addprop|getprop|setprop|envprop|remove_prop|getpropstr|getpropval|getpropfval|envpropstr|nextprop|desc|idesc|htmldesc|ihtmldesc|propdir\?|setdesc|setsucc|setfail|setdrop|setosucc|setofail|setodrop|succ|fail|drop|osucc|ofail|odrop|getlockstr|ansidesc|setansidesc|iansidesc|setiansidesc|reflist_add|reflist_find|reflist_del|copyprops|exit|call|execute|read|public|sleep|pid|ispid\?|kill|queue|fork|interp|caller|abort|case|trig|prog|parsempi|parseprop|cancall\?|compiled\?|tread|propqueue|envpropqueue|instances|magecall|wizcall|archcall|boycall|getpidinfo|getpids|try|catch|endcatch|jmp|enqueue|parsepropex|debug_on|debug_off|debug_line|selfcall|debugger_break|read_wants_blanks|get_read_wants_blanks|read_wants_blanks_toggle|read_wants_blanks_on|read_wants_blanks_off|catch_detailed|dup|dupn|ldup|over|pop|rot|rotate|sort|swap|depth|number\?|dbref\?|int\?|string\?|address\?|socket\?|lock\?|float\?|variable\?|array\?|mark|}|checkargs|reverse|lreverse|popn|pick|put|descr\?|sql\?|mark\?|nip|tuck'
   prims1: 'var|variable|variable\?|lvar|localvar|me|trigger|command|descr|var!|preempt|foreground|background|mode|setmode|pr_mode|fg_mode|bg_mode|sleep|event_wait|event_send|event_count|event_exists|timer_start|timer_stop|event_waitfor|watchpid|onevent|interrupt_level|random|bitor|bitxor|bitshift|ceil|floor|sqrt|pi|round|sin|cos|tan|asin|acos|atan|atan2|dist3d|xyz_to_polar|polar_to_xyz|exp|log|log10|fabs|pow|frand|fmod|modf|and|or|not|abs|srand|getseed|setseed|sign|xor|inf|epsilon'
   oper: '\+|\-|\*|/|%|<|>|=|!=|<=|>=|\^|\@|(?<!var)\!|\+\+|\-\-'
@@ -65,10 +65,12 @@ contexts:
         - match: '\b(while|break|continue)\b'
           scope: keyword.control.muf
   constants:
-    - match: '#[0-9]+'
+    - match: '\b#[0-9]+\b'
       scope: constant.other.placeholder.muf
     - match: '\b[0-9]+(?:\.[0-9]*)?\b'
       scope: constant.numeric.muf
+    - match: '\b[a-zA-Z_][a-zA-Z0-9]+\b'
+      scope: constant.other.placeholder.muf
     - match: '"'
       push:
         - meta_scope: string.quoted.double.muf
