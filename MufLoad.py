@@ -190,8 +190,8 @@ class MufFile():
             lines = tc.read_until(b" lines displayed.").decode().split('\r\n')
             for i in lines[:-1]:
                 output.write(i + '\n')
-        tc.write(b"pub #allon")
-        tc.write(b"@set me=!H")
+        tc.write(b"@set me=!H\n")
+        tc.write(b"pub #allon\n")
         tc.read_very_eager()
 #            mindex = 0
 #            while mindex < 1:
@@ -314,7 +314,7 @@ with open('project.yaml') as projfile:
                                       project['connect']['password']).encode())
     print("connect {} {}".format(project['connect']['username'],
                                  project['connect']['password']))
-    sleep(5)
+    sleep(2)
     for i in project['sync']:
         if 'no_exist' in i['file'].keys() and i['file']['no_exist']:
             try:
