@@ -24,7 +24,7 @@ programListMatch = re.compile(b"\s*([0-9]+):(.+)\r\n")
 programListTerminator = re.compile(b"[0-9]+ lines displayed\.")
 
 editorInsertExitMatch = [re.compile(b"Exiting insert mode\.")]
-editorCompilerStringMatch = [re.compile(b"Compiler done\.")]
+editorCompilerStringMatch = [re.compile(b"Compiler done\."), re.compile(b"^Error in line")]
 editorExitStringMatch = [re.compile(b"Editor exited\.")]
 
 objectModifiedStringFieldMatch = \
@@ -98,7 +98,8 @@ def because_I_cant_understand_strptime(s:str):
     return dt
 
 class MufFile():
-    def __init__(self, filename, depth=0, parent=None):
+    def __init__(self, filename, depth=0, parent=None, send_method="name",id=None,
+                 regname=None):
         self.dependencies = []
         self.transformedname = ""
         self.filename = filename
@@ -106,6 +107,9 @@ class MufFile():
         self.length = 0
         self.parent = parent
         self.includes = {}
+        self.id = id
+        self.regname = regname
+        self.send_method = send_method
         with open(filename) as file:
             for z in file.readlines():
                 pnmatch = prognameMatch.match(z)
@@ -124,8 +128,15 @@ class MufFile():
         self.hash = self.hash.hexdigest()
 
     def send(self, tc: Telnet):
+        let_be = False
         while True:
-            tc.write("@prog {}\n".format(self.transformedname).encode())
+            if self.send_method == "name":
+                tc.write("@prog {}\n".format(self.transformedname).encode())
+            elif self.send_method == "id":
+                tc.write("@prog {}\n".format(self.id).encode())
+            elif self.send_method == "regname":
+                print("Using regname:{0}".format(self.regname))
+                tc.write("@prog {}\n".format(self.regname).encode())
             mindex, match, _ = tc.expect([ProgramId, ProgramId2], timeout=3)
             if match is not None:
                 self.id = int(match.group(1))
@@ -135,13 +146,14 @@ class MufFile():
         counter = 0
         with open(self.filename) as fi:
             lines = fi.readlines()
+            if len(lines[-1]) > 0:
+                lines.append('')
             for i in lines:
                 tc.write("{}".format(i).encode())
 #                sleep(0.05)
                 counter += 1
-                if counter % 10 == 0:
-                    print("{}%".format(100 * counter / len(lines)),
-                          end='\r', flush=True)
+                print("{: =4.2}%".format(100 * counter / len(lines)),
+                      end='\r', flush=True)
         print("\n", end="", flush=True)
         print("finished sending")
         while True:
@@ -155,11 +167,16 @@ class MufFile():
             tc.write("c\n".encode())
             index, m, _ = tc.expect(editorCompilerStringMatch,
                                     timeout=7)
+            if index != None and index != 1:
+                let_be = True
             if m is not None:
                 break
         print("quitting")
         while True:
-            tc.write("q\n".encode())
+            if let_be:
+                tc.write("q\n".encode())
+            else:
+                tc.write("x\n".encode())
             index, m, _ = tc.expect(editorExitStringMatch,
                                     timeout=7)
             if m is not None:
@@ -295,14 +312,21 @@ class DepGraph():
 #  program refers to the correct id at runtime.
 
 
-#argInterpret = argparse.ArgumentParser()
-#argInterpret.add_argument()
-#tc = Telnet(host="localhost", port=2001)
-#tc.write(b"connect one potrzebie\n")
-#dg = DepGraph()
-#dg.addFile(MufFile("Channel/Channel.muf"))
-#dg.send(tc)
-
+# argInterpret = argparse.ArgumentParser()
+# argInterpret.add_argument()
+# tc = Telnet(host="localhost", port=2001)
+# tc.write(b"connect one potrzebie\n")
+# dg = DepGraph()
+# dg.addFile(MufFile("Channel/Channel.muf"))
+# dg.send(tc)
+parser = argparse.ArgumentParser("Manage files on the MUCK")
+parser.add_argument("--send", dest='files', action='append',
+                    help='Files to send', default=[])
+parser.add_argument('--sync', dest='sync', action='store_const',
+                    help='Sync files?', const=True, default=False)
+parser.add_argument('--send-all', dest='send_all', action='store_const',
+                    help='send all files', const=True, default=False)
+args = parser.parse_args()
 with open('project.yaml') as projfile:
     project = yaml.load(projfile)
     print(project)
@@ -315,19 +339,57 @@ with open('project.yaml') as projfile:
     print("connect {} {}".format(project['connect']['username'],
                                  project['connect']['password']))
     sleep(2)
-    for i in project['sync']:
-        if 'no_exist' in i['file'].keys() and i['file']['no_exist']:
-            try:
-                stat(i['file']['name'])
-                print('skipping {}'.format(i['file']['name']))
+
+    if args.sync:
+        for i in project['sync']:
+            if 'no_exist' in i['file'].keys() and i['file']['no_exist']:
+                try:
+                    stat(i['file']['name'])
+                    print('skipping {}'.format(i['file']['name']))
+                    continue
+                except FileNotFoundError:
+                    print('need to get {}'.format(i['file']['name']))
+            MufFile.sync(i['file']['name'], i['file']['id'], tc)
+    if args.send_all:
+        for i in project['send']:
+            f = None
+            if 'send_method' in i['file'].keys():
+                id = None
+                regname = None
+                print("Send method:"+i['file']['send_method'])
+                if 'id' in i['file'].keys():
+                    id = i['file']['id']
+                if 'regname' in i['file'].keys():
+                    regname = i['file']['regname']
+                f = MufFile(i['file']['name'], send_method=i['file']['send_method'],
+                        id=id,regname=regname)
+            else:
+                print("No send method found")
+                f = MufFile(i['file']['name'])
+            f.transformedname = i['file']['gamename']
+            print("Sending " + f.transformedname)
+            f.send(tc)
+            sleep(1)
+            print("\a")
+    else:
+        for i in project['send']:
+            if i['file']['name'] not in args.files:
                 continue
-            except FileNotFoundError:
-                print('need to get {}'.format(i['file']['name']))
-        MufFile.sync(i['file']['name'], i['file']['id'], tc)
-    for i in project['send']:
-        f = MufFile(i['file']['name'])
-        f.transformedname = i['file']['gamename']
-        print("Sending " + f.transformedname)
-        f.send(tc)
-        sleep(1)
-        print("\a")
+            send_with_id = False
+            f = None
+            if 'send_method' in i['file'].keys():
+                id = None
+                regname = None
+                print("Send method:"+i['file']['send_method'])
+                if 'id' in i['file'].keys():
+                    id = i['file']['id']
+                if 'regname' in i['file'].keys():
+                    regname = i['file']['regname']
+                f = MufFile(i['file']['name'], send_method=i['file']['send_method'],
+                        id=id,regname=regname)
+            else:
+                f = MufFile(i['file']['name'])
+            f.transformedname = i['file']['gamename']
+            print("Sending " + f.transformedname)
+            f.send(tc)
+            sleep(1)
