@@ -11,7 +11,8 @@ import argparse
 import datetime
 prognameMatch = re.compile("\(\(\( filename: (.+) \)\)\)")
 progDependencyMatch = re.compile("\(\(\( dependsOn: (.+) \)\)\)")
-progIncludeMatch = re.compile('\(\(\( includes: (.+) as (\.\.[a-zA-Z0-9-]+) \)\)\)')
+progIncludeMatch = re.compile(
+    '\(\(\( includes: (.+) as (\.\.[a-zA-Z0-9-]+) \)\)\)')
 programFinder = "@find {}\n"
 programFinderRegex = re.compile(b"(.+)([0-9]+):.+")
 programFinderTerminator = re.compile(b'\*\*\*End of List\*\*\*')
@@ -24,7 +25,8 @@ programListMatch = re.compile(b"\s*([0-9]+):(.+)\r\n")
 programListTerminator = re.compile(b"[0-9]+ lines displayed\.")
 
 editorInsertExitMatch = [re.compile(b"Exiting insert mode\.")]
-editorCompilerStringMatch = [re.compile(b"Compiler done\."), re.compile(b"^Error in line")]
+editorCompilerStringMatch = [re.compile(
+    b"Compiler done\."), re.compile(b"^Error in line")]
 editorExitStringMatch = [re.compile(b"Editor exited\.")]
 
 objectModifiedStringFieldMatch = \
@@ -54,7 +56,7 @@ functionListRegex = re.compile("\x1b\[[^m]*m")
 #    a. expect/error loop until match is found
 #    b. Maybe the telnet class could do with a wrapper class
 #       for handling this automatically.
-# 3. 
+# 3.
 
 class SyncException(Exception):
     def __init__(self, filename, remoteid):
@@ -64,7 +66,7 @@ class SyncException(Exception):
             " could not be found"
 
 
-def because_I_cant_understand_strptime(s:str):
+def because_I_cant_understand_strptime(s: str):
     months = {
         "Jan": 1,
         "Feb": 2,
@@ -97,8 +99,9 @@ def because_I_cant_understand_strptime(s:str):
     dt = datetime.datetime(year, month, day, hour, minute, second)
     return dt
 
+
 class MufFile():
-    def __init__(self, filename, depth=0, parent=None, send_method="name",id=None,
+    def __init__(self, filename, depth=0, parent=None, send_method="name", id=None,
                  regname=None):
         self.dependencies = []
         self.transformedname = ""
@@ -165,9 +168,11 @@ class MufFile():
         print("compiling program")
         while True:
             tc.write("c\n".encode())
-            index, m, _ = tc.expect(editorCompilerStringMatch,
-                                    timeout=7)
+            index, m, line = tc.expect(editorCompilerStringMatch,
+                                       timeout=7)
             if index != None and index != 1:
+                print("Message Recieved")
+                print(line.decode("ascii"))
                 let_be = True
             if m is not None:
                 break
@@ -188,7 +193,7 @@ class MufFile():
         idx, match, _ = tc.expect(objectModifiedStringFieldMatch)
         if idx == 1:
             raise SyncException(filename, remoteid)
-        #mod_date = datetime.datetime.strptime(match.group(1),
+        # mod_date = datetime.datetime.strptime(match.group(1),
         #                                      "%a %b %d %H:%M:%S %Z %Y")
         mod_date = because_I_cant_understand_strptime(match.group(1))
         local_stuff = path.getmtime(filename)
@@ -218,8 +223,6 @@ class MufFile():
 #                   or match is None:
 #                    break
 #                output.write(match.group(2).decode()+'\n')
-
-
 
 
 # Keep track of whether or not files are up to date on the server.
@@ -324,6 +327,9 @@ parser.add_argument("--send", dest='files', action='append',
                     help='Files to send', default=[])
 parser.add_argument('--sync', dest='sync', action='store_const',
                     help='Sync files?', const=True, default=False)
+parser.add_argument('--force-sync', default=[],
+                    dest='needsync',
+                    action='append', help='Force a file to be synced')
 parser.add_argument('--send-all', dest='send_all', action='store_const',
                     help='send all files', const=True, default=False)
 args = parser.parse_args()
@@ -350,19 +356,22 @@ with open('project.yaml') as projfile:
                 except FileNotFoundError:
                     print('need to get {}'.format(i['file']['name']))
             MufFile.sync(i['file']['name'], i['file']['id'], tc)
+    for i in project['sync']:
+        if i['file']['name'] in args.needsync:
+            MufFile.sync(i['file']['name'], i['file']['id'], tc)
     if args.send_all:
         for i in project['send']:
             f = None
             if 'send_method' in i['file'].keys():
                 id = None
                 regname = None
-                print("Send method:"+i['file']['send_method'])
+                print("Send method:" + i['file']['send_method'])
                 if 'id' in i['file'].keys():
                     id = i['file']['id']
                 if 'regname' in i['file'].keys():
                     regname = i['file']['regname']
                 f = MufFile(i['file']['name'], send_method=i['file']['send_method'],
-                        id=id,regname=regname)
+                            id=id, regname=regname)
             else:
                 print("No send method found")
                 f = MufFile(i['file']['name'])
@@ -380,13 +389,13 @@ with open('project.yaml') as projfile:
             if 'send_method' in i['file'].keys():
                 id = None
                 regname = None
-                print("Send method:"+i['file']['send_method'])
+                print("Send method:" + i['file']['send_method'])
                 if 'id' in i['file'].keys():
                     id = i['file']['id']
                 if 'regname' in i['file'].keys():
                     regname = i['file']['regname']
                 f = MufFile(i['file']['name'], send_method=i['file']['send_method'],
-                        id=id,regname=regname)
+                            id=id, regname=regname)
             else:
                 f = MufFile(i['file']['name'])
             f.transformedname = i['file']['gamename']
