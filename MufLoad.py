@@ -20,7 +20,7 @@ ProgramId = re.compile(b"Program .+ created with number ([0-9]+)")
 ProgramId2 = re.compile(
     b'Entering editor for .+\(#([0-9]+).+\)\.')
 # Command to list content of a program, showing line numbers
-programListCommand = "@list {}\n"
+programListCommand = "@dlist {}\n"
 programListMatch = re.compile(b"\s*([0-9]+):(.+)\r\n")
 programListTerminator = re.compile(b"[0-9]+ lines displayed\.")
 
@@ -332,6 +332,7 @@ parser.add_argument('--force-sync', default=[],
                     action='append', help='Force a file to be synced')
 parser.add_argument('--send-all', dest='send_all', action='store_const',
                     help='send all files', const=True, default=False)
+parser.add_argument('--spaz', const=True,default=False,action='store_const')
 args = parser.parse_args()
 with open('project.yaml') as projfile:
     project = yaml.load(projfile)
@@ -345,7 +346,16 @@ with open('project.yaml') as projfile:
     print("connect {} {}".format(project['connect']['username'],
                                  project['connect']['password']))
     sleep(2)
-
+    if args.spaz:
+        while True:
+            tc.close()
+            tc = Telnet(host=project['connect']['host'],
+                        port=int(project['connect']['port']))
+            tc.read_some()
+            tc.write("connect {} {}\n".format(project['connect']['username'],
+                     project['connect']['password']).encode())
+            sleep(0.1)
+            tc.read_some()
     if args.sync:
         for i in project['sync']:
             if 'no_exist' in i['file'].keys() and i['file']['no_exist']:
@@ -370,7 +380,8 @@ with open('project.yaml') as projfile:
                     id = i['file']['id']
                 if 'regname' in i['file'].keys():
                     regname = i['file']['regname']
-                f = MufFile(i['file']['name'], send_method=i['file']['send_method'],
+                f = MufFile(i['file']['name'],
+                            send_method=i['file']['send_method'],
                             id=id, regname=regname)
             else:
                 print("No send method found")
@@ -394,7 +405,8 @@ with open('project.yaml') as projfile:
                     id = i['file']['id']
                 if 'regname' in i['file'].keys():
                     regname = i['file']['regname']
-                f = MufFile(i['file']['name'], send_method=i['file']['send_method'],
+                f = MufFile(i['file']['name'],
+                            send_method=i['file']['send_method'],
                             id=id, regname=regname)
             else:
                 f = MufFile(i['file']['name'])
