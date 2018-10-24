@@ -202,8 +202,8 @@ class MufFile():
     @staticmethod
     def sync(filename, remoteid, tc: Telnet):
         tc.read_very_eager()
-        tc.write(b"@set me=H\n")
-        tc.write(b"pub #alloff\n")
+#        tc.write(b"@set me=H\n")
+#        tc.write(b"pub #alloff\n")
         sleep(2)
         tc.read_very_eager()
         tc.write(programListCommand.format(remoteid).encode())
@@ -211,9 +211,15 @@ class MufFile():
         with open(filename, 'w') as output:
             lines = tc.read_until(b" lines displayed.").decode().split('\r\n')
             for i in lines[:-1]:
+                if i[0:4] == "LOG>":
+                    continue
+                if i[0:5] == "PROG>":
+                    i = i[5:]
+                else:
+                    continue
                 output.write(i + '\n')
-        tc.write(b"@set me=!H\n")
-        tc.write(b"pub #allon\n")
+#        tc.write(b"@set me=!H\n")
+#        tc.write(b"pub #allon\n")
         tc.read_very_eager()
 #            mindex = 0
 #            while mindex < 1:
