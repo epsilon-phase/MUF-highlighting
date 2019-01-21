@@ -339,84 +339,115 @@ parser.add_argument('--force-sync', default=[],
 parser.add_argument('--send-all', dest='send_all', action='store_const',
                     help='send all files', const=True, default=False)
 parser.add_argument('--spaz', const=True,default=False,action='store_const')
+parser.add_argument('--primary',const=True,default=False,action='store_const')
+parser.add_argument('--host',default=[],action='append',dest='host')
 args = parser.parse_args()
 with open('project.yaml') as projfile:
     project = yaml.load(projfile)
     print(project)
     project = project['project']
-    tc = Telnet(host=project['connect']['host'],
-                port=int(project['connect']['port']))
-    tc.read_some()
-    tc.write("connect {} {}\n".format(project['connect']['username'],
-                                      project['connect']['password']).encode())
-    print("connect {} {}".format(project['connect']['username'],
-                                 project['connect']['password']))
-    sleep(2)
-    if args.spaz:
-        while True:
-            tc.close()
-            tc = Telnet(host=project['connect']['host'],
-                        port=int(project['connect']['port']))
-            tc.read_some()
-            tc.write("connect {} {}\n".format(project['connect']['username'],
-                     project['connect']['password']).encode())
-            sleep(0.1)
-            tc.read_some()
-    if args.sync:
+    for conn in project['connections']:        
+        conn=conn['connect']
+        if args.primary and \
+           (not 'primary' in conn.keys()):
+            continue
+        if len(args.host)>0\
+           and conn['host'] not in args.host:
+            continue
+        print(conn)
+        tc = Telnet(host=conn['host'],
+                    port=int(conn['port']))
+        tc.read_some()
+        tc.write("connect {} {}\n".format(conn['username'],
+                                          conn['password']).encode())
+        print("connect {} {}".format(conn['username'],
+                                     conn['password']))
+        sleep(2)
+        if args.spaz:
+            while True:
+                tc.close()
+                tc = Telnet(host=project['connect']['host'],
+                            port=int(project['connect']['port']))
+                tc.read_some()
+                tc.write("connect {} {}\n".format(project['connect']['username'],
+                         project['connect']['password']).encode())
+                sleep(0.1)
+                tc.read_some()
+        if args.sync and conn['sync']:
+            for i in project['sync']:
+                if 'no_exist' in i['file'].keys() and i['file']['no_exist']:
+                    try:
+                        stat(i['file']['name'])
+                        print('skipping {}'.format(i['file']['name']))
+                        continue
+                    except FileNotFoundError:
+                        print('need to get {}'.format(i['file']['name']))
+                MufFile.sync(i['file']['name'], i['file']['id'], tc)
         for i in project['sync']:
-            if 'no_exist' in i['file'].keys() and i['file']['no_exist']:
-                try:
-                    stat(i['file']['name'])
-                    print('skipping {}'.format(i['file']['name']))
+            if i['file']['name'] in args.needsync \
+               and 'sync' in conn.keys()\
+               and (not args.primary or\
+                    args.primary and 'primary' in conn.keys()):
+                MufFile.sync(i['file']['name'], i['file']['id'], tc)
+        if args.send_all:
+            for i in project['send']:
+                f = None
+                should_send=True
+                if 'send_method' in i['file'].keys():
+                    id = None
+                    regname = None
+                    print("Send method:" + i['file']['send_method'])
+                    if 'id' in i['file'].keys():
+                        id = i['file']['id']
+                        if '#' in id and 'primary' not in conn.keys():
+                            should_send=False
+                    if 'regname' in i['file'].keys():
+                        regname = i['file']['regname']
+                    f = MufFile(i['file']['name'],
+                                send_method=i['file']['send_method'],
+                                id=id, regname=regname)
+                else:
+                    print("No send method found")
+                    f = MufFile(i['file']['name'])
+                f.transformedname = i['file']['gamename']
+                if '#' in i['file']['gamename'] and 'primary' not in conn.keys():
+                    should_send=False
+                if not should_send:
+                    print('File ',f.transformedname,' is not encoded using an cross game manner')
                     continue
-                except FileNotFoundError:
-                    print('need to get {}'.format(i['file']['name']))
-            MufFile.sync(i['file']['name'], i['file']['id'], tc)
-    for i in project['sync']:
-        if i['file']['name'] in args.needsync:
-            MufFile.sync(i['file']['name'], i['file']['id'], tc)
-    if args.send_all:
-        for i in project['send']:
-            f = None
-            if 'send_method' in i['file'].keys():
-                id = None
-                regname = None
-                print("Send method:" + i['file']['send_method'])
-                if 'id' in i['file'].keys():
-                    id = i['file']['id']
-                if 'regname' in i['file'].keys():
-                    regname = i['file']['regname']
-                f = MufFile(i['file']['name'],
-                            send_method=i['file']['send_method'],
-                            id=id, regname=regname)
-            else:
-                print("No send method found")
-                f = MufFile(i['file']['name'])
-            f.transformedname = i['file']['gamename']
-            print("Sending " + f.transformedname)
-            f.send(tc)
-            sleep(1)
-            print("\a")
-    else:
-        for i in project['send']:
-            if i['file']['name'] not in args.files:
-                continue
-            send_with_id = False
-            f = None
-            if 'send_method' in i['file'].keys():
-                id = None
-                regname = None
-                print("Send method:" + i['file']['send_method'])
-                if 'id' in i['file'].keys():
-                    id = i['file']['id']
-                if 'regname' in i['file'].keys():
-                    regname = i['file']['regname']
-                f = MufFile(i['file']['name'],
-                            send_method=i['file']['send_method'],
-                            id=id, regname=regname)
-            else:
-                f = MufFile(i['file']['name'])
-            f.transformedname = i['file']['gamename']
-            print("Sending " + f.transformedname)
-            f.send(tc)
-            sleep(1)
+                print("Sending " + f.transformedname)
+                f.send(tc)
+                sleep(1)
+                print("\a")
+        else:
+            for i in project['send']:
+                if i['file']['name'] not in args.files:
+                    continue
+                send_with_id = False
+                should_send = True
+                f = None
+                if 'send_method' in i['file'].keys():
+                    id = None
+                    regname = None
+                    print("Send method:" + i['file']['send_method'])
+                    if 'id' in i['file'].keys():
+                        id = i['file']['id']
+                        if '#' in id and 'primary' not in conn.keys():
+                            should_send=False
+                    if 'regname' in i['file'].keys():
+                        regname = i['file']['regname']
+                    f = MufFile(i['file']['name'],
+                                send_method=i['file']['send_method'],
+                                id=id, regname=regname)
+                else:
+                    f = MufFile(i['file']['name'])
+                f.transformedname = i['file']['gamename']
+                if '#' in f.transformedname and 'primary' not in conn.keys():
+                    should_send=False
+                if not should_send:
+                    print(f.transformed_name, " is not appropriately kept with game independent identification. Skipping")
+                    continue
+                print("Sending " + f.transformedname)
+                f.send(tc)
+                sleep(1)
+        tc.close()
